@@ -1,0 +1,10 @@
+projet_nosql/
+├── app.py
+├── mongodb_connect.py
+├── neo4j_connect.py
+├── queries/
+│   ├── __init__.py  (fichier vide)
+│   ├── mongodb_queries.py
+│   └── neo4j_queries.py
+└── data/
+    └── movies.json
