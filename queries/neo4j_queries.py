@@ -71,19 +71,20 @@ class Neo4jQueries:
             
         query = """
         MATCH (a:Actor)-[:A_JOUE_DANS]->(f:Film)
-        WHERE f.revenue IS NOT NULL
-        WITH a, sum(f.revenue) AS total_revenue
+        WHERE f.revenue IS NOT NULL AND f.revenue <> ""
+        WITH a, sum(toFloat(f.revenue)) AS total_revenue
         RETURN a.name AS actor_name, total_revenue
         ORDER BY total_revenue DESC
         LIMIT 1
         """
         
         result = self.graph.run(query).data()
+        
         if result:
             return result[0]["actor_name"], result[0]["total_revenue"]
         else:
             return None, 0
-    
+
     def query_17_average_votes(self):
         """
         17. Calcule la moyenne des votes
@@ -197,29 +198,30 @@ class Neo4jQueries:
     def query_21_most_connected_films(self, limit=10):
         """
         21. Trouve les films les plus "connectés" (avec le plus d'acteurs en commun)
-        
+    
         Args:
             limit (int): Nombre de films à retourner
-            
+        
         Returns:
             list: Liste de dictionnaires (film1, film2, acteurs_communs)
         """
         if not self.graph:
             return []
-            
+
         query = """
         MATCH (f1:Film)<-[:A_JOUE_DANS]-(a:Actor)-[:A_JOUE_DANS]->(f2:Film)
         WHERE id(f1) < id(f2)
-        WITH f1, f2, collect(a.name) AS common_actors
-        RETURN f1.title AS film1, f2.title AS film2, 
-               length(common_actors) AS common_actor_count,
-               common_actors
+        WITH f1.title AS film1, f2.title AS film2, collect(DISTINCT a.name) AS common_actors
+        RETURN film1, film2, 
+                size(common_actors) AS common_actor_count,
+                common_actors
         ORDER BY common_actor_count DESC
         LIMIT $limit
         """
-        
-        result = self.graph.run(query, limit=limit).data()
+
+        result = self.graph.run(query, limit=limit).data() 
         return result
+    
     
     def query_22_actors_with_most_directors(self, limit=5):
         """
